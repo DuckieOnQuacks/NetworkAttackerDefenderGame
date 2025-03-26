@@ -15,3 +15,5 @@ class Defender:
         self.black_listed_bots.remove(bot)
 
 
+
+
