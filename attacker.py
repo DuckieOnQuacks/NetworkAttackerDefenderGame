@@ -1,9 +1,11 @@
 
 
 class Attacker:
-    def __init__(self, currency, servers):
+    def __init__(self, currency):
         self.currency = currency
-        self.servers = servers
+        self.num_bots = 0
+        self.bot_transmission_rate = 0
+        
 
 
 
