@@ -4,7 +4,7 @@ class Bot:
     def __init__(self):
         self.uid = generate(size=16)
         self.bot_transmission_rate = 0
-        self.packet_load = self.generate_packet_load()
+        self.packet_load = None
     
     def __str__(self):
         return "Bot "+ str(self.uid)
