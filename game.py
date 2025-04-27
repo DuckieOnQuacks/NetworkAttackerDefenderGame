@@ -25,9 +25,6 @@ class Game(Attacker, Defender, Shop):
         self.data_firewall_type = []
         self.rounds = 0
 
-        
-
-
     def __str__(self): 
         return "Game "+str(self.attacker.currency)+" "+str(self.defender.currency)+" "+str(self.rounds)+" "+str(self.server_yield)+" "+str(self.good_transmission_load)
 
@@ -91,7 +88,9 @@ class Game(Attacker, Defender, Shop):
             print("Round Start Defender Currency", self.defender.currency)
             print("-----------------------")
         
-        attacker_profit = min(self.defender.predict_revenue(), self.attacker.predict_revenue(self.defender.firewall_type)) - self.attacker.predict_expenses(self.shop)
+        # incorporate good traffic: only a fraction of bandwidth used for intrusion
+        intrusion_traffic = self.attacker.predict_revenue(self.defender.firewall_type) * (1 - self.good_traffic)
+        attacker_profit = min(self.defender.predict_revenue(), intrusion_traffic) - self.attacker.predict_expenses(self.shop)
         defender_profit = max(self.defender.predict_revenue() - self.attacker.predict_revenue(self.defender.firewall_type), 0) - self.defender.predict_expenses(self.shop)
         
         if not auto_mode:
@@ -108,7 +107,12 @@ class Game(Attacker, Defender, Shop):
             print("Attack Memory", self.attacker.profit_memory)
             print("Defender Memory", self.defender.profit_memory)
             
-        self.attacker.update_attacker(self.shop, 100,100)
+        # Only reinvest if attacker profit is positive
+        if attacker_profit > 0:
+            # reinvest a fraction of current resources into bots and bandwidth
+            bot_change = max(1, int(self.attacker.num_bots * 0.1))
+            band_change = max(1, int(self.attacker.total_bot_band * 0.1))
+            self.attacker.update_attacker(self.shop, bot_change, band_change)
         
         if not auto_mode:
             print("-----------------------")

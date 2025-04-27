@@ -21,7 +21,7 @@ class Attacker:
 
         self.num_bots = num_bots
         self.total_bot_band = bot_band
-        # self.energy = energy
+        self.energy = energy
         num_bots = int(num_bots)
 
         self.server_memory = []
@@ -54,7 +54,7 @@ class Attacker:
         return sum(self.server_memory) / len(self.server_memory)
 
     def predict_revenue(self, firewall_type):
-        return self.total_bot_band * self.num_bots * firewall_type
+        return self.total_bot_band * self.num_bots * self.energy * firewall_type
 
     def predict_firewall_type(self):
         return 
