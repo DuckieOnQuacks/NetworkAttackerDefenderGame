@@ -3,7 +3,8 @@ from packet import Packet
 import sys
 import string
 import os
-from graph import plot_list
+import time
+from graph import plot_list, plot_currency_over_time
 # def ask_user_for_god_mode():
 #     print("Do you want to enable god mode? (y/n)")
 #     god_mode = input()
@@ -35,7 +36,34 @@ def ask_user_for_good_traffic_transmission_load():
 
 if __name__ == "__main__":
 
-    file = sys.argv[1] if len(sys.argv) > 1 else None
+    # Check if auto mode is enabled
+    auto_mode = False
+    output_dir = None
+    
+    # Process command line arguments
+    i = 1
+    while i < len(sys.argv):
+        if sys.argv[i].lower() == "auto":
+            auto_mode = True
+            i += 1
+        elif sys.argv[i].lower() == "--output" or sys.argv[i].lower() == "-o":
+            if i + 1 < len(sys.argv):
+                output_dir = sys.argv[i + 1]
+                i += 2
+            else:
+                print("Error: Missing output directory after --output/-o")
+                sys.exit(1)
+        else:
+            file = sys.argv[i]
+            i += 1
+    
+    if 'file' not in locals():
+        print("Please provide a file with the game settings.")
+        print("Usage: python main.py [auto] [--output DIR] <settings_file>")
+        print("  - Use 'auto' to run without manual stepping")
+        print("  - Use '--output DIR' or '-o DIR' to specify where to save plots in auto mode")
+        sys.exit(1)
+    
     if file:
         with open(file, 'r') as f:
             lines = f.readlines()
@@ -55,30 +83,63 @@ if __name__ == "__main__":
             server_energy_cost = float(lines[13].strip().translate(str.maketrans('', '', string.ascii_letters)).replace("=", "").replace("_",""))
     else:
         print("Please provide a file with the game settings.")
+        print("  - Use 'auto' to run without manual stepping")
+        sys.exit(1)
 
     # attacker_currency, defender_currency = ask_user_for_currency_amount()
     # rounds = ask_user_for_rounds_to_attack()
     # defender_servers, server_yield = ask_user_for_defender_servers_amount()
     # good_traffic_transmission_load = ask_user_for_good_traffic_transmission_load()
+    
+    # Set up the output directory and filename for saving plots
+    # Extract just the filename without path and extension
+    if file:
+        # Get just the filename part without path
+        base_filename = os.path.basename(file)
+        # Remove the extension if present
+        base_filename = os.path.splitext(base_filename)[0]
+    
+    # Use the input filename for the plot
+    plot_filename = f"plots/{base_filename}_currency_plot.png"
+    
+    # In auto mode, always save to /plots
+    if auto_mode:
+            plot_save_path = plot_filename
+    else:
+        plot_save_path = None
+    
     game = Game(attacker_currency, defender_currency, energy, defender_servers, server_yield, 
                 good_traffic_transmission_load, bots_count, bot_bandwidth, firewall_type,
                 server_cost, energy_cost, bot_cost, firewall_cost, server_energy_cost)
+    
+    print(f"Running game in {'auto' if auto_mode else 'manual'} mode")
+    
     while game.attacker.currency > 0 and game.defender.currency > 0:
-        game.run_game()
-        print("----------------")
-        input("Press Enter to continue...")
-        os.system('cls' if os.name == 'nt' else 'clear')
+        game.run_game(auto_mode=auto_mode)
+        if not auto_mode:
+            print("----------------")
+            input("Press Enter to continue...")
+            os.system('cls' if os.name == 'nt' else 'clear')
+        else:
+            # Show progress indicator when in auto mode
+            if game.rounds % 5 == 0:  # Every 5 rounds
+                print(f"Round {game.rounds}: Attacker: {game.attacker.currency}, Defender: {game.defender.currency}")
+    
+    # Debug information
+    print(f"Game completed after {game.rounds} rounds")
+    print(f"Data points collected: {len(game.data_attacker_currency)} attacker, {len(game.data_defender_currency)} defender")
+    
     if game.attacker.currency > 0:
         print("Rounds: ", game.rounds)
         print("Attacker Wins")
         #data, title, xlabel, ylabel
-        plot_list(data=game.data_attacker_currency, title="Attacker Currency", xlabel="Rounds", ylabel="Currency")
-        plot_list(data=game.data_defender_currency, title="Defender Currency", xlabel="Rounds", ylabel="Currency")
+        plot_currency_over_time(game.data_attacker_currency, game.data_defender_currency, 
+                                save_path=plot_save_path)
     else:
         print("Rounds: ", game.rounds)
         print("Defender Wins")
-        plot_list(data=game.data_attacker_currency, title="Attacker Currency", xlabel="Rounds", ylabel="Currency")
-        plot_list(data=game.data_defender_currency, title="Defender Currency", xlabel="Rounds", ylabel="Currency")
+        plot_currency_over_time(game.data_attacker_currency, game.data_defender_currency,
+                                save_path=plot_save_path)
     # print(game.attacker)
     # print(game.defender)
     # print(game.rounds)

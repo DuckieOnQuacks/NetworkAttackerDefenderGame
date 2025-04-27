@@ -1,0 +1,22 @@
+ATT_CUR=1000000
+DEF_CUR=100000
+ENERGY=500
+NUM_DEF_SERVERS=10
+SERVER_INCOME=5000
+GOOD_TRAFFIC=5.0
+NUM_BOTS=50
+BOT_BAND=50
+FWALL=0.01
+SRV_COST=1000
+ENRG_COST=5
+BOT_COST=1
+FWALL_COST=100000
+SRV_ENERGY_COST=500
+
+# Extreme scenario for stress testing:
+# - Very high attacker currency
+# - Many defender servers but with lower income
+# - Extremely high bot count but low bandwidth
+# - Very strong firewall (0.01)
+# - Unusual cost ratios
+# - Designed to test edge cases and system stability 

@@ -1,0 +1,22 @@
+ATT_CUR=500000
+DEF_CUR=500000
+ENERGY=200
+NUM_DEF_SERVERS=5
+SERVER_INCOME=80000
+GOOD_TRAFFIC=2.0
+NUM_BOTS=10
+BOT_BAND=500
+FWALL=0.2
+SRV_COST=5000
+ENRG_COST=100
+BOT_COST=20
+FWALL_COST=50000
+SRV_ENERGY_COST=2000
+
+# High-stakes scenario:
+# - High starting currencies
+# - Very high server income
+# - Strong bot infrastructure
+# - High operational costs
+# - Each round involves significant currency changes
+# - Small tactical errors can lead to quick losses 

@@ -1,0 +1,20 @@
+ATT_CUR=150000
+DEF_CUR=50000
+ENERGY=150
+NUM_DEF_SERVERS=1
+SERVER_INCOME=10000
+GOOD_TRAFFIC=0.8
+NUM_BOTS=5
+BOT_BAND=200
+FWALL=0.5
+SRV_COST=500
+ENRG_COST=20
+BOT_COST=3
+FWALL_COST=5000
+SRV_ENERGY_COST=800
+
+# Attacker advantage scenario:
+# - Higher starting currency
+# - Stronger bots and energy
+# - Weak defender server infrastructure
+# - Relatively ineffective firewall 

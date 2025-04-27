@@ -1,4 +1,3 @@
-
 from attacker import Attacker
 from defender import Defender
 from shop import Shop
@@ -70,35 +69,61 @@ class Game(Attacker, Defender, Shop):
         # data_attacker_currency = []
         # data_firewall_type = []
 
-    def run_game(self):
+    def run_game(self, auto_mode=False):
+        # Record data at the beginning of the round
         self.data_num_bots.append(self.attacker.num_bots)
         self.data_bot_bandwidth.append(self.attacker.total_bot_band)
         self.data_num_servers.append(self.defender.servers)
         self.data_server_income.append(self.defender.server_yield)
         self.data_defender_profit.append(self.defender.predict_profit(shop=self.shop))
         self.data_attacker_profit.append(self.attacker.predict_profit(shop=self.shop, firewall_type=self.defender.firewall_type))
-        self.data_defender_currency.append(self.defender.currency)
-        self.data_attacker_currency.append(self.attacker.currency)
+        
+        # Store currency before operations
+        attacker_currency_start = self.attacker.currency
+        defender_currency_start = self.defender.currency
+        
+        self.data_defender_currency.append(defender_currency_start)
+        self.data_attacker_currency.append(attacker_currency_start)
         self.data_firewall_type.append(self.defender.firewall_type)
 
-        print("Round Start Attacker Currency", self.attacker.currency)
-        print("Round Start Defender Currency", self.defender.currency)
-        print("-----------------------")
+        if not auto_mode:
+            print("Round Start Attacker Currency", self.attacker.currency)
+            print("Round Start Defender Currency", self.defender.currency)
+            print("-----------------------")
+        
         attacker_profit = min(self.defender.predict_revenue(), self.attacker.predict_revenue(self.defender.firewall_type)) - self.attacker.predict_expenses(self.shop)
         defender_profit = max(self.defender.predict_revenue() - self.attacker.predict_revenue(self.defender.firewall_type), 0) - self.defender.predict_expenses(self.shop)
-        print("Actual Attacker Profit", attacker_profit)
-        print("Actual Defender Profit", defender_profit)
-        print("-----------------------")
+        
+        if not auto_mode:
+            print("Actual Attacker Profit", attacker_profit)
+            print("Actual Defender Profit", defender_profit)
+            print("-----------------------")
+        
         self.attacker.update_currency(attacker_profit)
         self.defender.update_currency(defender_profit)
         self.attacker.profit_memory=attacker_profit
         self.defender.profit_memory=defender_profit
-        print("Attack Memory", self.attacker.profit_memory)
-        print("Defender Memory", self.defender.profit_memory)
+        
+        if not auto_mode:
+            print("Attack Memory", self.attacker.profit_memory)
+            print("Defender Memory", self.defender.profit_memory)
+            
         self.attacker.update_attacker(self.shop, 100,100)
-        print("-----------------------")
-        print("Round End Attacker Currency", self.attacker.currency)
-        print("Round End Defender Currency", self.defender.currency)
+        
+        if not auto_mode:
+            print("-----------------------")
+            print("Round End Attacker Currency", self.attacker.currency)
+            print("Round End Defender Currency", self.defender.currency)
+            
+            # Debug info to verify data collection
+            print(f"Data recorded for round {self.rounds}:")
+            print(f"Attacker currency data points: {len(self.data_attacker_currency)}")
+            print(f"Defender currency data points: {len(self.data_defender_currency)}")
+            if len(self.data_attacker_currency) > 0:
+                print(f"Last attacker currency value: {self.data_attacker_currency[-1]}")
+            if len(self.data_defender_currency) > 0:
+                print(f"Last defender currency value: {self.data_defender_currency[-1]}")
+        
         self.rounds += 1
 
     def get_attacker(self):
