@@ -69,3 +69,16 @@ def plot_currency_over_time(attacker_data, defender_data, title="Currency Over T
         plt.savefig(save_path)
         print(f"Plot saved to {save_path}")
     plt.show()
+
+def plot_bots_over_time(bots_data):
+    """Plot the number of bots over each round and display the chart."""
+    if not bots_data:
+        print("Warning: No data to plot for Botnet Size Over Time")
+        return
+    plot_list(
+        bots_data,
+        title="Botnet Size Over Time",
+        xlabel="Round",
+        ylabel="Number of Bots"
+    )
+
