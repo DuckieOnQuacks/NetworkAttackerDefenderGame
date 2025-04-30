@@ -11,17 +11,17 @@ class Defender:
         self.firewall_type = firewall_type
         self.profit_memory = 0
 
-    # def get_firewall_cost(self, firewall_type):
-    #     if firewall_type == 0.01:
-    #         return 1000000
-    #     elif firewall_type == 0.1:
-    #         return 100000
-    #     elif firewall_type == 0.33:
-    #         return 1000
-    #     elif firewall_type == 0.5:
-    #         return 100
-    #     else:
-    #         return 0
+    def get_firewall_cost(self, firewall_type):
+         if firewall_type == 0.01:
+             return 1000000
+         elif firewall_type == 0.1:
+             return 100000
+         elif firewall_type == 0.33:
+             return 1000
+         elif firewall_type == 0.5:
+             return 100
+         else:
+             return 0
 
     def __str__(self):
         return "Defender "+str(self.currency)
