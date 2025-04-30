@@ -4,7 +4,7 @@ import sys
 import string
 import os
 import time
-from graph import plot_list, plot_currency_over_time, plot_bots_over_time
+from graph import plot_list, plot_currency_over_time
 # def ask_user_for_god_mode():
 #     print("Do you want to enable god mode? (y/n)")
 #     god_mode = input()
@@ -135,13 +135,12 @@ if __name__ == "__main__":
         #data, title, xlabel, ylabel
         plot_currency_over_time(game.data_attacker_currency, game.data_defender_currency, 
                                 save_path=plot_save_path)
-        plot_bots_over_time(game.data_num_bots)
     else:
         print("Rounds: ", game.rounds)
         print("Defender Wins")
         plot_currency_over_time(game.data_attacker_currency, game.data_defender_currency,
                                 save_path=plot_save_path)
-        plot_bots_over_time(game.data_num_bots)
+
         
     # print(game.attacker)
     # print(game.defender)
