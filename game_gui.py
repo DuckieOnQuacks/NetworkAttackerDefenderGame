@@ -53,21 +53,26 @@ class GameGUI:
                                    width=20, padding=5)
         self.run_button.grid(row=0, column=2, padx=(0, 20), sticky=tk.W)
         
-        # Add Skip to End button
+        # Add Reset button after Run Game button
+        self.reset_button = ttk.Button(self.button_frame, text="Reset Game", 
+                                     command=self.reset_game, width=20, padding=5)
+        self.reset_button.grid(row=0, column=3, padx=(0, 20), sticky=tk.W)
+        
+        # Move Skip to End button one column over
         self.skip_button = ttk.Button(self.button_frame, text="Skip to End", command=self.skip_to_end,
                                     width=20, padding=5)
-        self.skip_button.grid(row=0, column=3, padx=(0, 20), sticky=tk.W)
+        self.skip_button.grid(row=0, column=4, padx=(0, 20), sticky=tk.W)
         
-        # Add Auto Mode checkbox with more padding
+        # Move Auto Mode checkbox one column over
         self.auto_mode = tk.BooleanVar()
         self.auto_check = ttk.Checkbutton(self.button_frame, text="Auto Mode", 
                                         variable=self.auto_mode, padding=5)
-        self.auto_check.grid(row=0, column=4, padx=(0, 20), sticky=tk.W)
+        self.auto_check.grid(row=0, column=5, padx=(0, 20), sticky=tk.W)
         
-        # Add Continue button (initially hidden) with more padding
+        # Move Continue button one column over
         self.continue_button = ttk.Button(self.button_frame, text="Continue", 
-                                        command=self.continue_game, width=20, padding=5)
-        self.continue_button.grid(row=0, column=5, padx=(0, 20), sticky=tk.W)
+                                        command=self.next_round, width=20, padding=5)
+        self.continue_button.grid(row=0, column=6, padx=(0, 20), sticky=tk.W)
         self.continue_button.grid_remove()
         
         # Add malicious packet percentage control
@@ -252,10 +257,24 @@ class GameGUI:
                 self.defender_currency_data = []
                 self.bot_count_data = []
                 
-                # Capture and display initial state (round 0)
+                # Calculate and display initial state (round 0)
+                total_traffic = self.game.attacker.total_bot_band * self.game.attacker.num_bots
+                good_traffic = total_traffic * self.game.good_traffic
+                malicious_traffic = total_traffic * (1 - self.game.good_traffic)
+                successful_intrusions = malicious_traffic * self.game.defender.firewall_type
+                blocked_intrusions = malicious_traffic * (1 - self.game.defender.firewall_type)
+                
+                # Update all displays with initial state
                 self.update_stats(0, self.game.attacker.currency, 
                                 self.game.defender.currency, self.game.attacker.num_bots, 
                                 self.game.attacker.total_bot_band)
+                self.update_packet_stats(
+                    int(total_traffic),
+                    int(good_traffic),
+                    int(malicious_traffic),
+                    int(successful_intrusions),
+                    int(blocked_intrusions)
+                )
                 self.update_plots(self.game.attacker.currency, self.game.defender.currency, 
                                 self.game.attacker.num_bots)
                 
@@ -324,8 +343,6 @@ class GameGUI:
                 
             if not self.auto_mode.get():
                 self.continue_button.grid()
-                self.root.wait_variable(self.continue_var)
-                self.root.after(100, self.run_game_loop)
             else:
                 self.root.after(1000, self.run_game_loop)
         else:
@@ -338,9 +355,7 @@ class GameGUI:
     def continue_game(self):
         self.continue_button.grid_remove()
         self.continue_var.set(1)
-        if self.is_running:
-            self.root.after(100, self.run_game_loop)
-            
+        
     def update_status(self, text):
         self.status_label.config(text=text)
         self.root.update()
@@ -388,8 +403,11 @@ class GameGUI:
         self.defender_currency_data.append(defender_currency)
         self.bot_count_data.append(bot_count)
         
-        # Get current round number from game
-        rounds = range(len(self.attacker_currency_data))
+        # Use actual game rounds for x-axis
+        if hasattr(self, 'game') and self.game is not None:
+            rounds = list(range(self.game.rounds + 1))  # +1 to include round 0
+        else:
+            rounds = list(range(len(self.attacker_currency_data)))
         
         # Clear previous plots
         self.ax1.clear()
@@ -411,6 +429,10 @@ class GameGUI:
         self.ax2.set_ylabel('Number of Bots')
         self.ax2.legend()
         self.ax2.grid(True)
+        
+        # Set integer ticks for rounds
+        self.ax1.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
+        self.ax2.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
         
         # Adjust layout and draw
         self.fig.tight_layout()
@@ -513,3 +535,51 @@ class GameGUI:
         # Only update game if it exists
         if hasattr(self, 'game') and self.game is not None:
             self.game.good_traffic = 1 - self.malicious_percentage 
+
+    def next_round(self):
+        """Handle advancing to the next round"""
+        self.continue_button.grid_remove()
+        if self.is_running:
+            self.run_game_loop() 
+
+    def reset_game(self):
+        """Reset the game state and clear all displays"""
+        # Stop any running game
+        self.is_running = False
+        self.run_button.config(text="Run Game")
+        
+        # Clear game object
+        self.game = None
+        
+        # Reset all data arrays
+        self.attacker_currency_data = []
+        self.defender_currency_data = []
+        self.bot_count_data = []
+        
+        # Reset all statistics displays
+        self.update_stats(0, 0, 0, 0, 0)
+        self.update_packet_stats(0, 0, 0, 0, 0)
+        
+        # Clear plots
+        self.ax1.clear()
+        self.ax2.clear()
+        self.ax1.set_title('Currency Over Time')
+        self.ax1.set_xlabel('Rounds')
+        self.ax1.set_ylabel('Currency')
+        self.ax2.set_title('Bot Count Over Time')
+        self.ax2.set_xlabel('Rounds')
+        self.ax2.set_ylabel('Number of Bots')
+        self.fig.tight_layout()
+        self.canvas.draw()
+        
+        # Reset firewall statistics
+        self.firewall_type_label.config(text="Current Firewall Type: 0.0")
+        self.firewall_quality_label.config(text="Firewall Quality: Basic")
+        self.firewall_cost_label.config(text="Firewall Cost: 0")
+        
+        # Hide continue button if visible
+        self.continue_button.grid_remove()
+        
+        # Reset status and add message
+        self.update_status("Game Reset")
+        self.add_message("\n=== Game Reset ===\nPlease select a scenario to start a new game.") 

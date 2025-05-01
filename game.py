@@ -2,7 +2,6 @@ from attacker import Attacker
 from defender import Defender
 from shop import Shop
 from packet import Packet
-import random
 
 # Main game class
 class Game(Attacker, Defender, Shop): 

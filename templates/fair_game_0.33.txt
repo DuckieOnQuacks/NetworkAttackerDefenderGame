@@ -1,0 +1,19 @@
+ATT_CUR=100000
+DEF_CUR=100000
+ENERGY=100
+NUM_DEF_SERVERS=2
+SERVER_INCOME=9000
+GOOD_TRAFFIC=0.5
+NUM_BOTS=10
+BOT_BAND=100
+FWALL=0.33
+SRV_COST=500
+ENRG_COST=20
+BOT_COST=3
+FWALL_COST=5000
+SRV_ENERGY_COST=800
+
+# Fair game scenario:
+# - Equal starting currency
+# - Moderate botnet vs server infrastructure
+# - Balanced firewall effectiveness and energy
