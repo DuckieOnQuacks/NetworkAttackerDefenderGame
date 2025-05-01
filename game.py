@@ -100,8 +100,8 @@ class Game(Attacker, Defender, Shop):
         successful_intrusions = malicious_traffic * self.defender.firewall_type
         blocked_intrusions = malicious_traffic * (1 - self.defender.firewall_type)
         
-        # Calculate intrusion rate (percentage of total traffic that was successful intrusions)
-        intrusion_rate = successful_intrusions / total_traffic if total_traffic > 0 else 0
+        # Calculate intrusion rate (percentage of malicious traffic that was successful)
+        intrusion_rate = successful_intrusions / malicious_traffic if malicious_traffic > 0 else 0
         
         # Calculate profits based on successful intrusions
         # Attacker gets a percentage of defender's revenue based on successful intrusions
@@ -129,7 +129,7 @@ class Game(Attacker, Defender, Shop):
             print("Defender Memory", self.defender.profit_memory)
             
         # Let the attacker's decision method handle bot management
-        self.attacker.decision(self.shop)
+        self.attacker.decision(self.shop, intrusion_rate)
             
         # Update defender's firewall based on intrusions
         self.defender.process_round(intrusion_rate)

@@ -100,41 +100,35 @@ class Attacker:
         self.total_bot_band += band_change
         self.currency -= costs
 
-    def decision(self, shop):
-        # If attacker has sustained significant losses (more than 7% of currency), consider reducing
-        if self.profit_memory < -(self.currency * 0.07):
-            # If we have bots and are losing significant money, reduce bot count
-            if self.num_bots > 1:  # Only reduce if we have more than 1 bot
-                # Calculate reduction based on how much we're losing, but more cautious
-                reduction = max(1, int(self.num_bots * (abs(self.profit_memory) / self.currency) * 0.02))
-                reduction = min(reduction, self.num_bots - 1)  # Always keep at least 1 bot
-                print(f"Reducing bots by {reduction} due to significant losses of {self.profit_memory:,}")
-                self.update_attacker(shop, -reduction, -reduction)
-                
-                # If losses are very severe (more than 40% of current currency), consider leaving
-                if abs(self.profit_memory) > (self.currency * 0.4):
-                    if random.random() < 0.15:  # Reduced chance to leave
-                        print("Attacker has decided to leave the market due to severe losses")
-                        return True
-            elif self.num_bots <= 1 and abs(self.profit_memory) > (self.currency * 0.45):
-                # Only leave with 1 bot if losses are extremely severe
-                if random.random() < 0.25:
-                    print("Attacker has decided to leave the market due to severe losses with minimal bots")
-                    return True
+    def decision(self, shop, intrusion_rate):
+        # High intrusion rate means our attacks are getting through
+        # Low intrusion rate means the firewall is blocking most attacks
         
-        # If we're profitable or losses are small, consider expanding
-        elif self.profit_memory > -(self.currency * 0.02):  # More conservative with losses
-            # More moderate increase when profitable
-            base_increase = max(1, int(self.num_bots * 0.15))  # Base 15% increase
-            if self.profit_memory > 0:
-                # Additional increase based on profit margin
-                profit_increase = int(self.num_bots * (self.profit_memory / self.currency) * 0.25)
-                increase = max(base_increase, profit_increase)
-            else:
-                increase = base_increase
-                
-            print(f"Increasing bots by {increase} due to acceptable performance ({self.profit_memory:,})")
+        # Calculate loss percentage relative to current currency
+        loss_percentage = abs(self.profit_memory) / self.currency if self.currency > 0 else float('inf')
+        
+        # If losses are severe (more than 20% of current currency), withdraw completely
+        if loss_percentage > 0.20 and self.num_bots > 0:
+            print(f"Withdrawing all bots due to severe losses ({self.profit_memory}, {loss_percentage*100:.1f}% of currency)")
+            self.update_attacker(shop, -self.num_bots, -self.total_bot_band)
+            return True  # Signal to end the game
+            
+        # If intrusion rate is good (>50%), add more bots
+        if intrusion_rate > 0.50:
+            # Scale increase with intrusion rate success
+            increase = min(max(1, int(intrusion_rate * 10)), 10)
+            print(f"Increasing bots by {increase} due to high intrusion success rate ({intrusion_rate*100:.1f}%)")
             self.update_attacker(shop, increase, increase)
-        
+        # If intrusion rate is poor (<30%) and we have more than minimum bots, reduce
+        elif intrusion_rate < 0.30 and self.num_bots > 5:
+            decrease = min(max(1, int((0.30 - intrusion_rate) * 10)), 5)
+            print(f"Decreasing bots by {decrease} due to low intrusion success rate ({intrusion_rate*100:.1f}%)")
+            self.update_attacker(shop, -decrease, -decrease)
+        # If we're in between but losing money, make small adjustments
+        elif self.profit_memory < -1000 and self.num_bots > 5:
+            decrease = min(max(1, int(abs(self.profit_memory) / 2000)), 3)
+            print(f"Minor reduction of {decrease} bots due to losses while having moderate success")
+            self.update_attacker(shop, -decrease, -decrease)
+            
         return False  # Continue playing
     

@@ -104,8 +104,8 @@ class Defender:
             (1.0, "Basic")        # No security
         ]
         
-        # Only upgrade if we have high intrusion rate (5% or more)
-        should_upgrade = avg_rate > 0.05
+        # Only upgrade if we have high intrusion rate (10% or more)
+        should_upgrade = avg_rate > 0.10 and len(self.intrusion_history) >= 2
         
         if should_upgrade:
             # Try each firewall option from best to worst
@@ -114,6 +114,7 @@ class Defender:
                 # If we can afford it and it's better than current
                 if cost_change <= self.currency and firewall_type < self.firewall_type:
                     print(f"Upgrading firewall to {quality} ({firewall_type}) for {cost_change:,} currency")
+                    print(f"Upgrade reason: Average intrusion rate of {avg_rate*100:.1f}% exceeds 10% threshold")
                     self.firewall_type = firewall_type
                     self.currency -= cost_change
                     # Update all servers with new firewall type
@@ -121,13 +122,14 @@ class Defender:
                         server.firewall_type = firewall_type
                         server.update_quality()
                     break  # Stop after finding best affordable option
-        elif avg_rate < 0.02 and self.firewall_type < 0.5:  # Also adjusted the downgrade threshold to 2%
+        elif avg_rate < 0.02 and len(self.intrusion_history) >= 3 and self.firewall_type < 0.5:
             # If intrusion rate is very low and we have strong security,
             # consider slightly relaxing to save costs
             new_firewall = min(0.5, self.firewall_type * 1.1)
             cost_change = self.get_firewall_cost(new_firewall) - self.get_firewall_cost(self.firewall_type)
             if abs(new_firewall - self.firewall_type) > 0.01:
                 print(f"Relaxing firewall from {self.firewall_type} to {new_firewall} to save costs")
+                print(f"Downgrade reason: Low average intrusion rate of {avg_rate*100:.1f}%")
                 self.firewall_type = new_firewall
                 # Update all servers with new firewall type
                 for server in self.server_list:

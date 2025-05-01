@@ -251,7 +251,13 @@ class GameGUI:
                 self.attacker_currency_data = []
                 self.defender_currency_data = []
                 self.bot_count_data = []
-                self.rounds = 0
+                
+                # Capture and display initial state (round 0)
+                self.update_stats(0, self.game.attacker.currency, 
+                                self.game.defender.currency, self.game.attacker.num_bots, 
+                                self.game.attacker.total_bot_band)
+                self.update_plots(self.game.attacker.currency, self.game.defender.currency, 
+                                self.game.attacker.num_bots)
                 
                 # Start the game loop
                 self.run_game_loop()
@@ -288,6 +294,9 @@ class GameGUI:
             successful_intrusions = malicious_traffic * self.game.defender.firewall_type
             blocked_intrusions = malicious_traffic * (1 - self.game.defender.firewall_type)
             
+            # Calculate intrusion rate for attacker decision
+            intrusion_rate = successful_intrusions / malicious_traffic if malicious_traffic > 0 else 0
+            
             # Update packet statistics
             self.update_packet_stats(
                 int(total_traffic),
@@ -305,7 +314,7 @@ class GameGUI:
                             self.game.attacker.num_bots)
             
             # Check if attacker wants to leave the market
-            if self.game.attacker.decision(self.game.shop):
+            if self.game.attacker.decision(self.game.shop, intrusion_rate):
                 self.add_message("\nAttacker is considering leaving the market...")
                 self.show_game_end(self.game.attacker.currency, self.game.defender.currency, 
                                 self.game.attacker.num_bots, self.game.attacker.profit_memory)
@@ -379,13 +388,16 @@ class GameGUI:
         self.defender_currency_data.append(defender_currency)
         self.bot_count_data.append(bot_count)
         
+        # Get current round number from game
+        rounds = range(len(self.attacker_currency_data))
+        
         # Clear previous plots
         self.ax1.clear()
         self.ax2.clear()
         
         # Plot currency
-        self.ax1.plot(self.attacker_currency_data, 'r-', label='Attacker')
-        self.ax1.plot(self.defender_currency_data, 'b-', label='Defender')
+        self.ax1.plot(rounds, self.attacker_currency_data, 'r-', label='Attacker')
+        self.ax1.plot(rounds, self.defender_currency_data, 'b-', label='Defender')
         self.ax1.set_title('Currency Over Time')
         self.ax1.set_xlabel('Rounds')
         self.ax1.set_ylabel('Currency')
@@ -393,7 +405,7 @@ class GameGUI:
         self.ax1.grid(True)
         
         # Plot bot count
-        self.ax2.plot(self.bot_count_data, 'g-', label='Bot Count')
+        self.ax2.plot(rounds, self.bot_count_data, 'g-', label='Bot Count')
         self.ax2.set_title('Bot Count Over Time')
         self.ax2.set_xlabel('Rounds')
         self.ax2.set_ylabel('Number of Bots')
