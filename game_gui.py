@@ -170,17 +170,17 @@ class GameGUI:
 
         # Add firewall statistics frame
         self.firewall_frame = ttk.LabelFrame(self.stats_frame, text="Firewall Statistics", padding="10")
-        self.firewall_frame.grid(row=5, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(10, 0))
+        self.firewall_frame.grid(row=0, column=2, rowspan=5, sticky=(tk.W, tk.E), padx=(20, 0))
         
         # Firewall statistics labels
         self.firewall_type_label = ttk.Label(self.firewall_frame, text="Current Firewall Type: 0.0", padding=5)
         self.firewall_type_label.grid(row=0, column=0, sticky=tk.W, pady=2)
         
         self.firewall_quality_label = ttk.Label(self.firewall_frame, text="Firewall Quality: Basic", padding=5)
-        self.firewall_quality_label.grid(row=0, column=1, sticky=tk.W, pady=2, padx=(20, 0))
+        self.firewall_quality_label.grid(row=1, column=0, sticky=tk.W, pady=2)
         
         self.firewall_cost_label = ttk.Label(self.firewall_frame, text="Firewall Cost: 0", padding=5)
-        self.firewall_cost_label.grid(row=1, column=0, sticky=tk.W, pady=2)
+        self.firewall_cost_label.grid(row=2, column=0, sticky=tk.W, pady=2)
         
         # Initialize packet statistics
         self.total_packets = 0
@@ -270,9 +270,9 @@ class GameGUI:
             return
             
         if self.game.attacker.currency > 0 and self.game.defender.currency > 0:
-            # Check if defender should pull out (firewall is 1)
+            # Check if attacker should pull out (firewall is 1)
             if self.game.defender.firewall_type == 1:
-                self.add_message("\nDefender has pulled out of the market due to maximum firewall effectiveness!")
+                self.add_message("\nAttacker has pulled out of the market due to maximum firewall effectiveness!")
                 self.show_game_end(self.game.attacker.currency, self.game.defender.currency, 
                                 self.game.attacker.num_bots, self.game.attacker.profit_memory)
                 self.is_running = False
