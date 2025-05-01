@@ -3,4 +3,3 @@ dash-bootstrap-components
 dash-cytoscape
 plotly
 numpy
-nanoid
