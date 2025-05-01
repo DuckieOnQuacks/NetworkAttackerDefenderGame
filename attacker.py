@@ -86,21 +86,55 @@ class Attacker:
         if self.total_bot_band + band_change < 0:
             print("Not enough bot band to remove")
             return
-        self.num_bots += bot_change
-        self.total_bot_band += band_change
-        if bot_change < 0:
-            bot_change = 0
-        if band_change < 0:
-            band_change = 0
-        costs = self.calculate_change_cost(shop, bot_change, band_change)
+            
+        # Calculate costs only for positive changes (we don't get refunds for reductions)
+        costs = self.calculate_change_cost(shop, max(0, bot_change), max(0, band_change))
         print("Attacker Costs for Change", costs)
+        
         if costs > self.currency:
             print("Not enough currency to change")
-        else:
-            self.currency -= self.calculate_change_cost(shop, bot_change, band_change)
+            return
+            
+        # Apply the changes
+        self.num_bots += bot_change
+        self.total_bot_band += band_change
+        self.currency -= costs
 
     def decision(self, shop):
-        if self.profit_memory <= 0 and abs(self.profit_memory) < 10000:
-            miniscule_change = random.randint(1, 10)
-            self.update_attacker(shop, miniscule_change, miniscule_change)
+        # If attacker has sustained significant losses (more than 7% of currency), consider reducing
+        if self.profit_memory < -(self.currency * 0.07):
+            # If we have bots and are losing significant money, reduce bot count
+            if self.num_bots > 1:  # Only reduce if we have more than 1 bot
+                # Calculate reduction based on how much we're losing, but more cautious
+                reduction = max(1, int(self.num_bots * (abs(self.profit_memory) / self.currency) * 0.02))
+                reduction = min(reduction, self.num_bots - 1)  # Always keep at least 1 bot
+                print(f"Reducing bots by {reduction} due to significant losses of {self.profit_memory:,}")
+                self.update_attacker(shop, -reduction, -reduction)
+                
+                # If losses are very severe (more than 40% of current currency), consider leaving
+                if abs(self.profit_memory) > (self.currency * 0.4):
+                    if random.random() < 0.15:  # Reduced chance to leave
+                        print("Attacker has decided to leave the market due to severe losses")
+                        return True
+            elif self.num_bots <= 1 and abs(self.profit_memory) > (self.currency * 0.45):
+                # Only leave with 1 bot if losses are extremely severe
+                if random.random() < 0.25:
+                    print("Attacker has decided to leave the market due to severe losses with minimal bots")
+                    return True
+        
+        # If we're profitable or losses are small, consider expanding
+        elif self.profit_memory > -(self.currency * 0.02):  # More conservative with losses
+            # More moderate increase when profitable
+            base_increase = max(1, int(self.num_bots * 0.15))  # Base 15% increase
+            if self.profit_memory > 0:
+                # Additional increase based on profit margin
+                profit_increase = int(self.num_bots * (self.profit_memory / self.currency) * 0.25)
+                increase = max(base_increase, profit_increase)
+            else:
+                increase = base_increase
+                
+            print(f"Increasing bots by {increase} due to acceptable performance ({self.profit_memory:,})")
+            self.update_attacker(shop, increase, increase)
+        
+        return False  # Continue playing
     

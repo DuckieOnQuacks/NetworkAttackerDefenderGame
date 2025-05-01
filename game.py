@@ -67,9 +67,11 @@ class Game(Attacker, Defender, Shop):
         # data_firewall_type = []
 
     def run_game(self, auto_mode=False):
-        # Record data at the beginning of the round
-        self.data_num_bots.append(self.attacker.num_bots)
-        self.data_bot_bandwidth.append(self.attacker.total_bot_band)
+        # Only record bot data if there are bots or if this is the first round
+        if self.attacker.num_bots > 0 or self.rounds == 0:
+            self.data_num_bots.append(self.attacker.num_bots)
+            self.data_bot_bandwidth.append(self.attacker.total_bot_band)
+        
         self.data_num_servers.append(self.defender.servers)
         self.data_server_income.append(self.defender.server_yield)
         self.data_defender_profit.append(self.defender.predict_profit(shop=self.shop))
@@ -89,35 +91,54 @@ class Game(Attacker, Defender, Shop):
             print("-----------------------")
         
         # incorporate good traffic: only a fraction of bandwidth used for intrusion
-        intrusion_traffic = self.attacker.predict_revenue(self.defender.firewall_type) * (1 - self.good_traffic)
-        attacker_profit = min(self.defender.predict_revenue(), intrusion_traffic) - self.attacker.predict_expenses(self.shop)
-        defender_profit = max(self.defender.predict_revenue() - self.attacker.predict_revenue(self.defender.firewall_type), 0) - self.defender.predict_expenses(self.shop)
+        total_traffic = self.attacker.total_bot_band * self.attacker.num_bots
+        good_traffic = total_traffic * self.good_traffic
+        malicious_traffic = total_traffic * (1 - self.good_traffic)
+        
+        # Calculate successful and blocked intrusions based on firewall type
+        # Lower firewall type means better security (fewer successful intrusions)
+        successful_intrusions = malicious_traffic * self.defender.firewall_type
+        blocked_intrusions = malicious_traffic * (1 - self.defender.firewall_type)
+        
+        # Calculate intrusion rate (percentage of total traffic that was successful intrusions)
+        intrusion_rate = successful_intrusions / total_traffic if total_traffic > 0 else 0
+        
+        # Calculate profits based on successful intrusions
+        # Attacker gets a percentage of defender's revenue based on successful intrusions
+        defender_revenue = self.defender.predict_revenue()
+        attacker_revenue = min(successful_intrusions, defender_revenue) * 1.2  # Reduced from 1.5 to 1.2
+        attacker_expenses = self.attacker.predict_expenses(self.shop) * 0.8  # Increased from 0.7 to 0.8
+        defender_loss = min(successful_intrusions * 1.1, defender_revenue)  # Reduced from 1.2 to 1.1
+        
+        attacker_profit = attacker_revenue - attacker_expenses
+        defender_profit = max(defender_revenue - defender_loss, 0) - self.defender.predict_expenses(self.shop)
         
         if not auto_mode:
             print("Actual Attacker Profit", attacker_profit)
             print("Actual Defender Profit", defender_profit)
+            print("Intrusion Rate:", intrusion_rate)
             print("-----------------------")
         
         self.attacker.update_currency(attacker_profit)
         self.defender.update_currency(defender_profit)
-        self.attacker.profit_memory=attacker_profit
-        self.defender.profit_memory=defender_profit
+        self.attacker.profit_memory = attacker_profit
+        self.defender.profit_memory = defender_profit
         
         if not auto_mode:
             print("Attack Memory", self.attacker.profit_memory)
             print("Defender Memory", self.defender.profit_memory)
             
-        # Only reinvest if attacker profit is positive
-        if attacker_profit > 0:
-            # reinvest a fraction of current resources into bots and bandwidth
-            bot_change = max(1, int(self.attacker.num_bots * 0.1))
-            band_change = max(1, int(self.attacker.total_bot_band * 0.1))
-            self.attacker.update_attacker(self.shop, bot_change, band_change)
+        # Let the attacker's decision method handle bot management
+        self.attacker.decision(self.shop)
+            
+        # Update defender's firewall based on intrusions
+        self.defender.process_round(intrusion_rate)
         
         if not auto_mode:
             print("-----------------------")
             print("Round End Attacker Currency", self.attacker.currency)
             print("Round End Defender Currency", self.defender.currency)
+            print("Current Firewall Type", self.defender.firewall_type)
             
             # Debug info to verify data collection
             print(f"Data recorded for round {self.rounds}:")
