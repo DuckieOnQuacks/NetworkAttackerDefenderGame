@@ -207,6 +207,7 @@ class GameGUI:
         # Game state
         self.game = None
         self.is_running = False
+        self.continue_var = tk.IntVar()  # Initialize continue variable
         
     def get_available_scenarios(self):
         scenarios = {}
@@ -329,7 +330,7 @@ class GameGUI:
         self.continue_button.grid_remove()
         self.continue_var.set(1)
         if self.is_running:
-            self.root.after(1000, self.run_game_loop)
+            self.root.after(100, self.run_game_loop)
             
     def update_status(self, text):
         self.status_label.config(text=text)
