@@ -11,7 +11,7 @@ class GameGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Network Attacker-Defender Game")
-        self.root.geometry("1920x1080")  # Full HD resolution
+        self.root.geometry("1280x720")  # Full HD resolution
         
         # Configure grid weights
         self.root.grid_rowconfigure(0, weight=1)
@@ -102,11 +102,31 @@ class GameGUI:
         
         # Create message frame with more padding
         self.message_frame = ttk.LabelFrame(self.main_frame, text="Messages", padding="15")
-        self.message_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.message_frame.grid(row=1, column=1, rowspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), padx=(15, 0))
         
         # Configure message frame grid
         self.message_frame.grid_columnconfigure(0, weight=1)
         self.message_frame.grid_rowconfigure(0, weight=1)
+        
+        # Initialize message text with scrollbar and more padding
+        self.message_text = tk.Text(self.message_frame, height=8, width=100, padx=10, pady=10)
+        self.message_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.message_text.config(state=tk.DISABLED)
+        
+        # Add scrollbar to message text
+        scrollbar = ttk.Scrollbar(self.message_frame, orient="vertical", command=self.message_text.yview)
+        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        self.message_text.configure(yscrollcommand=scrollbar.set)
+        
+        # Add a separator for game end messages
+        self.separator = ttk.Separator(self.message_frame, orient='horizontal')
+        self.separator.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+        self.separator.grid_remove()
+        
+        # Add a special message label for game end
+        self.game_end_label = ttk.Label(self.message_frame, text="", font=('Helvetica', 12, 'bold'), padding=10)
+        self.game_end_label.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+        self.game_end_label.grid_remove()
         
         # Initialize status labels with more padding
         self.status_label = ttk.Label(self.status_frame, text="Game Ready", padding=5)
@@ -168,26 +188,6 @@ class GameGUI:
         self.malicious_packets = 0
         self.successful_intrusions = 0
         self.blocked_intrusions = 0
-        
-        # Initialize message text with scrollbar and more padding
-        self.message_text = tk.Text(self.message_frame, height=8, width=100, padx=10, pady=10)
-        self.message_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        self.message_text.config(state=tk.DISABLED)
-        
-        # Add scrollbar to message text
-        scrollbar = ttk.Scrollbar(self.message_frame, orient="vertical", command=self.message_text.yview)
-        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
-        self.message_text.configure(yscrollcommand=scrollbar.set)
-        
-        # Add a separator for game end messages
-        self.separator = ttk.Separator(self.message_frame, orient='horizontal')
-        self.separator.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
-        self.separator.grid_remove()
-        
-        # Add a special message label for game end
-        self.game_end_label = ttk.Label(self.message_frame, text="", font=('Helvetica', 12, 'bold'), padding=10)
-        self.game_end_label.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
-        self.game_end_label.grid_remove()
         
         # Initialize plots with larger size
         self.fig, (self.ax1, self.ax2) = plt.subplots(2, 1, figsize=(15, 10))
